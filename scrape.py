@@ -5,6 +5,20 @@ from bs4 import BeautifulSoup
 import os
 
 
+def scraper(url):
+    options = Options()
+    options.add_argument("--headless")  # Run in headless mode
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+
+    driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
+    driver.get(url)
+
+    html_content = driver.page_source
+    driver.quit()
+
+    return html_content
+
 def clean_body_content(body_content):
     soup = BeautifulSoup(body_content, "html.parser")
 
