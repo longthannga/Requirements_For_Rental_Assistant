@@ -1,9 +1,6 @@
 name: Update Eligibility Requirements For Rental Assistance Sheet
 
-on:
-  schedule:
-    - cron: '0 1 * * *'  # 1 AM UTC every day (8 AM PT in summer, 7 AM PT in winter)
-  workflow_dispatch:
+
 
 jobs:
   update-sheet:
