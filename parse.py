@@ -27,7 +27,7 @@ dictionary = {
 
 }
 
-model = OllamaLLM(model="gemma3:4b", streaming=True, temperature=0.2)
+model = OllamaLLM(model="phi3:mini", streaming=True, temperature=0.2)
 
 tokenizer = tiktoken.get_encoding("cl100k_base")
 
