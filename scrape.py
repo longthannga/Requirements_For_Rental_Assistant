@@ -23,7 +23,6 @@ def scraper(url):
     
     try:
         driver.set_page_load_timeout(45)  # Increase timeout to 45 seconds
-        print(f"Loading {url}...")
         driver.get(url)
         
         # Wait for page to fully render
