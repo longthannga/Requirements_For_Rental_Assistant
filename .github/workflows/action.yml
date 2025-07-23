@@ -35,7 +35,7 @@ jobs:
           ollama pull gemma3:4b
 
       - name: Create credentials
-        run: echo '${{ secrets.GCP_CREDENTIALS }}' > credential.json
+        run: echo '${{ secrets.GCP_CREDENTIALS }}' > credentials.json
 
       - name: Run updater script
         env:
