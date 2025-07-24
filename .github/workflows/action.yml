@@ -42,30 +42,33 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-ollama-model-
 
-      - name: Install Ollama & start manually
+      - name: Install Ollama & stop systemd
         run: |
-          # Block systemd before install
-          sudo systemctl disable ollama.service || true
-          sudo systemctl stop ollama.service || true
-
-          # Install Ollama CLI
           curl -fsSL https://ollama.com/install.sh | sh
           ollama pull gemma3:4b
 
-          # Neutralize systemd again post-install
+          # Force disable systemd after install
           sudo systemctl disable ollama.service || true
           sudo systemctl stop ollama.service || true
+          sudo rm -f /etc/systemd/system/default.target.wants/ollama.service || true
 
-          # Start Ollama manually
+      - name: Start Ollama server manually
+        run: |
           nohup ollama serve --listen 127.0.0.1:11434 > ollama.log 2>&1 &
 
-          # Wait for server readiness
-          echo "Waiting for Ollama API..."
-          until curl -s http://127.0.0.1:11434/v1/models >/dev/null 2>&1; do
+          echo "Waiting for Ollama API (timeout = 60s)..."
+          for i in {1..30}; do
+            if curl -s http://127.0.0.1:11434/v1/models >/dev/null; then
+              echo "✔ Ollama is ready"
+              exit 0
+            fi
             sleep 2
             echo -n "."
           done
-          echo " ✔ Ollama is ready"
+
+          echo "Ollama failed to start in time"
+          cat ollama.log
+          exit 1
 
       - name: Create GCP credentials file
         run: echo '${{ secrets.GCP_CREDENTIALS }}' > credentials.json
