@@ -14,36 +14,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Add swap space
+      - name: Optimize memory
         run: |
-          sudo fallocate -l 4G /swapfile
+          sudo fallocate -l 8G /swapfile
           sudo chmod 600 /swapfile
           sudo mkswap /swapfile
           sudo swapon /swapfile
+          echo "swapoff -a" >> $GITHUB_ENV  # Cleanup later
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install Chrome
-        uses: browser-actions/setup-chrome@v1
-
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           sudo apt-get update
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          sudo apt-get install -y libgl1 libx11-6 libxcb1 libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxtst6
 
-      - name: Install Ollama
-        run: curl -fsSL https://ollama.com/install.sh | sh
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install chromedriver-autoinstaller gspread langchain-ollama beautifulsoup4 selenium tiktoken
 
       - name: Start Ollama service
         run: |
-          ollama serve > /tmp/ollama.log 2>&1 &
-          sleep 15
-          ollama pull gemma3:1b
+          curl -fsSL https://ollama.com/install.sh | sh
           nohup ollama serve > /tmp/ollama.log 2>&1 &
+          sleep 30
+          ollama pull gemma3:4b
+          curl -I http://localhost:11434
 
       - name: Setup credentials
         run: echo '${{ secrets.GCP_CREDENTIALS }}' > credentials.json
@@ -51,4 +51,20 @@ jobs:
       - name: Run updater
         env:
           SHEET_ID: ${{ secrets.SHEET_ID }}
-        run: python main.py
+        run: |
+          # Set Chrome options
+          export CHROME_OPTS="--headless --disable-gpu --no-sandbox --disable-dev-shm-usage"
+          python main.py
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: ollama-logs
+          path: /tmp/ollama.log
+
+      - name: Cleanup
+        run: |
+          killall ollama || true
+          sudo swapoff /swapfile
+          sudo rm /swapfile
