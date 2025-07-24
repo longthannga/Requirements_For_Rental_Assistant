@@ -24,29 +24,21 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y chromium-browser
-          sudo ln -s /usr/bin/chromium-browser /usr/bin/chromium
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-
-      - name: Create swap space
-        run: |
-          sudo fallocate -l 4G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
 
 
       - name: Install ollama
         run: curl -fsSL https://ollama.com/install.sh | sh
 
+      - name: Create credentials
+        run: echo '${{ secrets.GCP_CREDENTIALS }}' > credentials.json
+
       - name: Run ollama
         run: |
           ollama serve &
           ollama pull phi3:mini
-
-      - name: Create credentials
-        run: echo '${{ secrets.GCP_CREDENTIALS }}' > credentials.json
+          ./run-llm.sh
 
       - name: Run updater script
         env:
