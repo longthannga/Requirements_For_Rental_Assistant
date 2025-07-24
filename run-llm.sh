@@ -2,7 +2,7 @@
 
 DATE=$(date +'%Y-%m-%d')
 FILE_PATH="./src/phrases/$DATE.md"
-MODEL='llama3.2-motivational'
+MODEL='gemma3:4b-motivational'
 MODEL_FILE='./Modelfile'
 
 # Avoid running the command if the file already exists
