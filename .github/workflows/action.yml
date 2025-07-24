@@ -42,15 +42,16 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-ollama-model-
 
-      - name: Install Ollama & stop systemd
+            - name: Install Ollama & remove systemd artifacts
         run: |
           curl -fsSL https://ollama.com/install.sh | sh
           ollama pull gemma3:4b
 
-          # Force disable systemd after install
+          # Systemd workaround: disable service and unlink it completely
           sudo systemctl disable ollama.service || true
           sudo systemctl stop ollama.service || true
-          sudo rm -f /etc/systemd/system/default.target.wants/ollama.service || true
+          sudo rm -f /etc/systemd/system/ollama.service
+          sudo rm -f /etc/systemd/system/default.target.wants/ollama.service
 
       - name: Start Ollama server manually
         run: |
