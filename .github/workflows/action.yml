@@ -24,33 +24,24 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y chromium-chromedriver
-
       - name: Install Python dependencies
         run: |
+          sudo apt-get update
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Install ollama
         run: curl -fsSL https://ollama.com/install.sh | bash
 
-      - name: Make scripts executable
-        run: chmod +x run-llm.sh
+      - uses: stefanzweifel/git-auto-commit-action@v5
 
-      - name: Run LLM script
-        run: ./run-llm.sh
+      - name: Run ollama
+        run: |
+          ollama serve &
+          ollama pull gemma3:4b
 
       - name: Create credentials
         run: echo '${{ secrets.GCP_CREDENTIALS }}' > credentials.json
-
-      - name: Start Ollama service
-        run: |
-          ollama serve &
-          sleep 10  # Wait for server to initialize
-          ollama pull gemma3:4b
 
       - name: Run updater script
         env:
