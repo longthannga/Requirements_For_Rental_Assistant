@@ -2,34 +2,46 @@ name: Update Eligibility Requirements For Rental Assistance Sheet
 
 on:
   schedule:
-    - cron: '0 1 1 * *'  # 1 AM UTC every day (8 AM PT in summer, 7 AM PT in winter)
-  workflow_dispatch:
+    - cron: '0 1 1 * *'    # 1 AM UTC on the 1st of every month
+  workflow_dispatch:      # manual trigger
+
+permissions:
+  contents: write
 
 jobs:
   update-sheet:
     runs-on: ubuntu-latest
-    permissions: 
-      contents: write  # Explicitly grant write permission
+    timeout-minutes: 60
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Install dependencies
+      - name: Install Python dependencies
         run: |
           sudo apt-get update
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Install Chrome dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-chromedriver
 
       - name: Install ollama
-        run: curl -fsSL https://ollama.com/install.sh | sh
+        run: curl -fsSL https://ollama.com/install.sh | bash
+
+      - name: Run LLM
+        run: ./run-llm.sh
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
 
       - name: Create credentials
         run: echo '${{ secrets.GCP_CREDENTIALS }}' > credentials.json
@@ -38,19 +50,19 @@ jobs:
         run: |
           ollama serve &
           ollama pull phi3:mini
-          ./run-llm.sh
+
+      - name: Create credentials
+        run: echo '${{ secrets.GCP_CREDENTIALS }}' > credentials.json
 
       - name: Run updater script
         env:
           SHEET_ID: ${{ secrets.SHEET_ID }}
         run: python main.py
-        
-      - name: Commit updates
+
+      - name: Commit and push changes
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@users.noreply.github.com"
           git add -A
           git diff-index --quiet HEAD || git commit -m "Auto-update: $(date +'%Y-%m-%d')"
-          
-      - name: Push changes
-        run: git push origin HEAD:main
+          git push origin HEAD:main
