@@ -42,7 +42,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-ollama-model-
 
-            - name: Install Ollama & remove systemd artifacts
+      - name: Install Ollama & remove systemd artifacts
         run: |
           curl -fsSL https://ollama.com/install.sh | sh
           ollama pull gemma3:4b
