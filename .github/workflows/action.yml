@@ -42,18 +42,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-ollama-model-
 
-      - name: Install Ollama CLI & pull gemma3:4b
+      - name: Install Ollama & start manually
         run: |
-          curl -fsSL https://ollama.com/install.sh | sh
-          ollama pull gemma3:4b
-
-      - name: Start Ollama manually (bypass systemd)
-        run: |
-          # Prevent systemd from interfering
+          # Block systemd before install
           sudo systemctl disable ollama.service || true
           sudo systemctl stop ollama.service || true
 
-          # Start Ollama server manually
+          # Install Ollama CLI
+          curl -fsSL https://ollama.com/install.sh | sh
+          ollama pull gemma3:4b
+
+          # Neutralize systemd again post-install
+          sudo systemctl disable ollama.service || true
+          sudo systemctl stop ollama.service || true
+
+          # Start Ollama manually
           nohup ollama serve --listen 127.0.0.1:11434 > ollama.log 2>&1 &
 
           # Wait for server readiness
