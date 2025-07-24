@@ -43,7 +43,7 @@ jobs:
       - name: Run ollama
         run: |
           ollama serve &
-          ollama pull gemma3:4b
+          ollama pull phi3:mini
 
       - name: Create credentials
         run: echo '${{ secrets.GCP_CREDENTIALS }}' > credentials.json
