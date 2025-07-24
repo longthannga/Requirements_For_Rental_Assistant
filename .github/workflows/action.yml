@@ -20,16 +20,21 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.10'
-
+          
       - name: Install dependencies
         run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser
+          sudo ln -s /usr/bin/chromium-browser /usr/bin/chromium
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Install Chrome dependencies
+      - name: Create swap space
         run: |
-          sudo apt-get update
-          sudo apt-get install -y chromium-chromedriver
+          sudo fallocate -l 4G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
 
       - name: Install ollama
         run: curl -fsSL https://ollama.com/install.sh | sh
