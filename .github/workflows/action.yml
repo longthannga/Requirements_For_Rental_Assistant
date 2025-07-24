@@ -46,7 +46,7 @@ jobs:
         run: |
           curl -fsSL https://ollama.com/install.sh | sh
           ollama pull gemma3:4b
-
+          ollama serve
           # Systemd workaround: disable service and unlink it completely
           sudo systemctl disable ollama.service || true
           sudo systemctl stop ollama.service || true
