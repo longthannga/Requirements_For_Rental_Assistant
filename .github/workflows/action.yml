@@ -47,18 +47,22 @@ jobs:
           curl -fsSL https://ollama.com/install.sh | sh
           ollama pull gemma3:4b
 
-      - name: Start Ollama HTTP server
+      - name: Start Ollama manually (bypass systemd)
         run: |
-          # Launch in background, logging to a file
+          # Prevent systemd from interfering
+          sudo systemctl disable ollama.service || true
+          sudo systemctl stop ollama.service || true
+
+          # Start Ollama server manually
           nohup ollama serve --listen 127.0.0.1:11434 > ollama.log 2>&1 &
 
-          # Poll until /v1/models responds
-          echo "Waiting for Ollama API to be ready…"
+          # Wait for server readiness
+          echo "Waiting for Ollama API..."
           until curl -s http://127.0.0.1:11434/v1/models >/dev/null 2>&1; do
             sleep 2
             echo -n "."
           done
-          echo " Ollama is up!"
+          echo " ✔ Ollama is ready"
 
       - name: Create GCP credentials file
         run: echo '${{ secrets.GCP_CREDENTIALS }}' > credentials.json
