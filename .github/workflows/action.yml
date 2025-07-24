@@ -42,16 +42,24 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-ollama-model-
 
-      - name: Install Ollama & remove systemd artifacts
+      - name: Install Ollama & disable systemd
         run: |
           curl -fsSL https://ollama.com/install.sh | sh
           ollama pull gemma3:4b
-          ollama serve
-          # Systemd workaround: disable service and unlink it completely
+
+          # Wipe out systemd artifacts
           sudo systemctl disable ollama.service || true
           sudo systemctl stop ollama.service || true
-          sudo rm -f /etc/systemd/system/ollama.service
-          sudo rm -f /etc/systemd/system/default.target.wants/ollama.service
+          sudo rm -f /etc/systemd/system/ollama.service || true
+          sudo rm -f /etc/systemd/system/default.target.wants/ollama.service || true
+
+      - name: Kill any existing Ollama server
+        run: |
+          echo "Checking for running Ollama server..."
+          if lsof -i :11434; then
+            echo "Port 11434 is in use. Killing existing process..."
+            ps aux | grep 'ollama serve' | grep -v grep | awk '{print $2}' | xargs -r kill -9
+          fi
 
       - name: Start Ollama server manually
         run: |
@@ -60,7 +68,7 @@ jobs:
           echo "Waiting for Ollama API (timeout = 60s)..."
           for i in {1..30}; do
             if curl -s http://127.0.0.1:11434/v1/models >/dev/null; then
-              echo "✔ Ollama is ready"
+              echo "Ollama is ready"
               exit 0
             fi
             sleep 2
