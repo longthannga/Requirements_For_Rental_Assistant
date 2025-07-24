@@ -12,6 +12,8 @@ jobs:
   update-sheet:
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout code
@@ -27,59 +29,20 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Create swap space
+      - name: Install ollama
+        run: curl -fsSL https://ollama.com/install.sh | bash
+
+      - name: Run LLM
+        run: ./run-llm.sh
+
+      - uses: stefanzweifel/git-auto-commit-action@v5
+
+      - name: Run ollama
         run: |
-          sudo fallocate -l 4G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-
-      - name: Cache Ollama models directory
-        uses: actions/cache@v3
-        with:
-          path: ~/.ollama
-          key: ${{ runner.os }}-ollama-model-${{ hashFiles('**/action.yml') }}
-          restore-keys: |
-            ${{ runner.os }}-ollama-model-
-
-      - name: Install Ollama & disable systemd
-        run: |
-          curl -fsSL https://ollama.com/install.sh | sh
-          ollama pull gemma3:4b
-          ollama serve
-
-          # Wipe out systemd artifacts
-          sudo systemctl disable ollama.service || true
-          sudo systemctl stop ollama.service || true
-          sudo rm -f /etc/systemd/system/ollama.service || true
-          sudo rm -f /etc/systemd/system/default.target.wants/ollama.service || true
-
-      - name: Kill any existing Ollama server
-        run: |
-          echo "Checking for running Ollama server..."
-          if lsof -i :11434; then
-            echo "Port 11434 is in use. Killing existing process..."
-            ps aux | grep 'ollama serve' | grep -v grep | awk '{print $2}' | xargs -r kill -9
-          fi
-
-      - name: Start Ollama server manually
-        run: |
-          nohup ollama serve --listen 127.0.0.1:11434 > ollama.log 2>&1 &
-
-          echo "Waiting for Ollama API (timeout = 60s)..."
-          for i in {1..30}; do
-            if curl -s http://127.0.0.1:11434/v1/models >/dev/null; then
-              echo "Ollama is ready"
-              exit 0
-            fi
-            sleep 2
-            echo -n "."
-          done
-
-          echo "Ollama failed to start in time"
-          cat ollama.log
-          exit 1
-
+          ollama serve &
+          ollama pull phi3:mini
+          ./run-llm.sh
+          
       - name: Create GCP credentials file
         run: echo '${{ secrets.GCP_CREDENTIALS }}' > credentials.json
 
