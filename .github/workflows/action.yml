@@ -30,26 +30,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Install Chrome dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y chromium-chromedriver
-
       - name: Install ollama
         run: curl -fsSL https://ollama.com/install.sh | bash
 
-      - name: Run LLM
-        run: ./run-llm.sh
-
       - uses: stefanzweifel/git-auto-commit-action@v5
-
-      - name: Create credentials
-        run: echo '${{ secrets.GCP_CREDENTIALS }}' > credentials.json
 
       - name: Run ollama
         run: |
           ollama serve &
-          ollama pull phi3:mini
+          ollama pull gemma3:4b
 
       - name: Create credentials
         run: echo '${{ secrets.GCP_CREDENTIALS }}' > credentials.json
