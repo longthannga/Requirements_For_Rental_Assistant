@@ -15,8 +15,9 @@ sheet_id = os.environ.get('SHEET_ID')
 work_book = client.open_by_key(sheet_id)
 sheet = work_book.worksheets()[0]
 
-sheet.batch_clear(["A1:C10"])
 data = parse.get_data()
+
+sheet.batch_clear(["A1:C10"])
 
 sheet.format("A1:D1", {
     "textFormat": {"bold": True,
