@@ -27,7 +27,7 @@ dictionary = {
 
 }
 
-model = OllamaLLM(model="gemma3:1b", streaming=True, temperature=0.2)
+model = OllamaLLM(model="gemma3:4b", streaming=True, temperature=0.2)
 
 tokenizer = tiktoken.get_encoding("cl100k_base")
 
@@ -85,7 +85,6 @@ def get_eligibility_requirements(content):
             "contact information, and non-eligibility content\n"
             "3. Specificity: Include exact numbers/ranges when available (e.g., 'Income below 50% AMI')\n"
             "4. Scope: Include all published requirements (both mandatory and optional)\n"
-            "5. Formatting: If need to use bullet point, use + as the bullet point\n\n"
             "**Output Instructions:**\n"
             "- If no requirements found: 'None published'\n"
         )
