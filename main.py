@@ -11,12 +11,13 @@ scopes = [
 
 creds = Credentials.from_service_account_file("credentials.json", scopes=scopes)
 client = gspread.authorize(creds)
-sheet_id = os.environ.get('SHEET_ID')
+sheet_id = "1GWqdskR-ibtKkxWZ981BOiePkOS4kKHAN4-p6QWp3NU"
 work_book = client.open_by_key(sheet_id)
 sheet = work_book.worksheets()[0]
 
-sheet.batch_clear(["A1:C10"])
 data = parse.get_data()
+sheet.batch_clear(["A1:C10"])
+
 
 sheet.format("A1:D1", {
     "textFormat": {"bold": True,
@@ -34,7 +35,7 @@ sheet.format("A1:D1", {
     "horizontalAlignment": "CENTER"
 })
 
-sheet.format(f"A2:D8", {
+sheet.format(f"A2:A8", {
     "wrapStrategy": "WRAP",
     "verticalAlignment": "TOP",
     "textFormat": {"foregroundColor": {  
@@ -44,6 +45,18 @@ sheet.format(f"A2:D8", {
             }
         },
     "horizontalAlignment": "CENTER"
+})
+
+sheet.format(f"B2:C7", {
+    "wrapStrategy": "WRAP",
+    "verticalAlignment": "TOP",
+    "textFormat": {"foregroundColor": {  
+            "red": 42/255,
+            "green": 76/255,
+            "blue": 68/255
+            }
+        },
+    "horizontalAlignment": "LEFT"
 })
 
 # Prepare header and data rows
